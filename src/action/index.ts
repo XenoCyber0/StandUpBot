@@ -42,26 +42,29 @@ async function run(): Promise<void> {
     const octokit = github.getOctokit(token);
     const { owner, repo } = context.repo;
 
-    // Fetch the diff for this PR.
-    const diffResp = await octokit.rest.pulls.get({
-      owner,
-      repo,
-      pull_number: pr.number,
-      mediaType: { format: 'diff' },
-    });
+    // Fetch the diff and commit list for this PR concurrently — they are
+    // independent, so batching them saves a round-trip over sequential awaits.
+    const [diffResp, commits] = await Promise.all([
+      octokit.rest.pulls.get({
+        owner,
+        repo,
+        pull_number: pr.number,
+        mediaType: { format: 'diff' },
+      }),
+      octokit.rest.pulls.listCommits({
+        owner,
+        repo,
+        pull_number: pr.number,
+        per_page: 50,
+      }),
+    ]);
     let diff = diffResp.data as unknown as string;
     if (diff.length > MAX_DIFF_CHARS) {
       core.info(`Diff is large (${diff.length} chars); capping before summarisation.`);
       diff = diff.slice(0, MAX_DIFF_CHARS);
     }
 
-    const commits = await octokit.rest.pulls.listCommits({
-      owner,
-      repo,
-      pull_number: pr.number,
-      per_page: 50,
-    });
-    const commitSubjects = commits.data.map((c) => c.commit.message.split('\n')[0]);
+    const commitSubjects = commits.data.map((c: { commit: { message: string } }) => c.commit.message.split('\n')[0]);
 
     const config = await loadConfig(process.env.GITHUB_WORKSPACE ?? process.cwd());
 

@@ -5,6 +5,29 @@ import { buildUserPrompt, SYSTEM_PROMPT } from './prompt';
 import type { GenerateContext, PRDescription, StandupbotConfig } from './types';
 import { ALLOWED_LABELS, DEFAULT_MAX_DIFF_TOKENS } from './types';
 
+/**
+ * Run `fn` over `items` with at most `concurrency` in-flight at once.
+ * Rejects as soon as any call fails (the rest are left running but their
+ * results are ignored by the caller — matches the previous sequential
+ * early-exit behaviour where the first error aborted the loop).
+ */
+async function mapWithConcurrency<T>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T) => Promise<void>,
+): Promise<void> {
+  let next = 0;
+  const worker = async (): Promise<void> => {
+    while (next < items.length) {
+      const item = items[next++];
+      await fn(item);
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, items.length) }, worker),
+  );
+}
+
 /** Extra instruction appended when we force JSON mode on the final call. */
 const JSON_MODE_HINT =
   '\n\nRemember: respond with ONLY the JSON object described in the system prompt.';
@@ -123,25 +146,36 @@ async function summarizeDiff(
   const stats: string[] = [];
   let used = 0;
   let llmCalls = 0;
+  // Per-file LLM summarisation calls dominate wall-time on large PRs, so we
+  // run them concurrently (bounded) instead of one-at-a-time. Hard cap on the
+  // number of summaries matches the original sequential loop's `llmCalls < 8`.
+  const SUMMARIZE_CONCURRENCY = 4;
+  const MAX_SUMMARY_CALLS = 8;
   const summaryBudget = Math.max(200, Math.floor(maxTokens / 2));
 
   // Small files first so they survive whole.
-  for (const f of [...files].sort((a, b) => a.tokens - b.tokens)) {
-    if (!f.isBinary && used + f.tokens <= maxTokens) {
-      payloadParts.push(f.body);
-      used += f.tokens;
-    } else if (!f.isBinary && f.tokens <= summaryBudget * 4 && llmCalls < 8) {
-      const summary = await llm.chat([
-        { role: 'system', content: SUMMARIZE_SYSTEM },
-        { role: 'user', content: `Summarise what changed in this file diff:\n\n${f.body}` },
-      ]);
-      llmCalls++;
-      payloadParts.push(`FILE: ${f.path} — summary: ${summary.trim()}`);
-      used += estimateTokens(summary);
-    } else {
-      stats.push(`FILE: ${f.path} — ${f.additions} additions, ${f.deletions} deletions`);
-    }
-  }
+  await mapWithConcurrency(
+    [...files].sort((a, b) => a.tokens - b.tokens),
+    SUMMARIZE_CONCURRENCY,
+    async (f) => {
+      if (!f.isBinary && used + f.tokens <= maxTokens) {
+        payloadParts.push(f.body);
+        used += f.tokens;
+      } else if (!f.isBinary && f.tokens <= summaryBudget * 4 && llmCalls < MAX_SUMMARY_CALLS) {
+        // Claim a slot before awaiting so the cap holds when pushes onto the
+        // shared arrays interleave across concurrent workers.
+        llmCalls++;
+        const summary = await llm.chat([
+          { role: 'system', content: SUMMARIZE_SYSTEM },
+          { role: 'user', content: `Summarise what changed in this file diff:\n\n${f.body}` },
+        ]);
+        payloadParts.push(`FILE: ${f.path} — summary: ${summary.trim()}`);
+        used += estimateTokens(summary);
+      } else {
+        stats.push(`FILE: ${f.path} — ${f.additions} additions, ${f.deletions} deletions`);
+      }
+    },
+  );
 
   let payload = payloadParts.join('\n\n');
   if (stats.length || excludedSet.size) {

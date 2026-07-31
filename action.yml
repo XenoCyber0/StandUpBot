@@ -1,0 +1,37 @@
+name: StandupBot
+description: >-
+  Auto-generate a high-quality PR description (Summary / Changes / Testing) and
+  suggested labels from the PR diff, using any OpenAI-compatible LLM endpoint
+  (OpenAI, OpenRouter, omniroute, freellmapi, Ollama, LM Studio, ...).
+author: standupbot
+branding:
+  icon: edit-3
+  color: purple
+
+inputs:
+  llm-base-url:
+    description: >-
+      Base URL of an OpenAI-compatible LLM endpoint (e.g.
+      https://api.openai.com/v1, https://openrouter.ai/api/v1, your omniroute or
+      freellmapi gateway, http://localhost:11434/v1 for Ollama). Falls back to the
+      LLM_BASE_URL env var; required unless provided in .standupbot.yml.
+    required: false
+  llm-api-key:
+    description: >-
+      API key / bearer token for the LLM endpoint. Falls back to the
+      LLM_API_KEY env var. Secrets only — never commit this.
+    required: false
+  model:
+    description: >-
+      Model identifier understood by the provider. Required (no default) unless
+      set via the LLM_MODEL env var or .standupbot.yml.
+    required: false
+  github-token:
+    description: Token used to read the PR and write the description (GITHUB_TOKEN).
+    required: false
+    default: ${{ github.token }}
+
+runs:
+  using: node20
+  # Self-contained bundle produced by `pnpm package` (ncc). Commit dist-action/.
+  main: dist-action/index.js

@@ -1,0 +1,47 @@
+{
+  "name": "standupbot",
+  "version": "1.0.0",
+  "description": "Auto-generate high-quality PR descriptions and changelog entries from git diffs with any LLM — bring-your-own OpenAI-compatible provider (OpenAI, OpenRouter, omniroute, freellmapi, Ollama, LM Studio, ...).",
+  "license": "MIT",
+  "type": "commonjs",
+  "bin": {
+    "standupbot": "dist/cli/index.js"
+  },
+  "main": "dist/core/index.js",
+  "files": [
+    "dist",
+    "action.yml"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "format": "prettier --write \"{src,tests}/**/*.ts\" \"*.{json,yml,md}\"",
+    "format:check": "prettier --check \"{src,tests}/**/*.ts\" \"*.{json,yml,md}\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "package": "ncc build src/action/index.ts -o dist-action --license licenses.txt",
+    "prepare": "pnpm run build",
+    "prepublishOnly": "pnpm run build && pnpm run package"
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.0",
+    "commander": "^12.1.0",
+    "yaml": "^2.5.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "@vercel/ncc": "^0.38.3",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.9"
+  }
+}

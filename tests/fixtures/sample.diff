@@ -1,0 +1,41 @@
+diff --git a/src/index.ts b/src/index.ts
+index 1111111..2222222 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -1,4 +1,6 @@
+ import { greet } from './greet';
++import { config } from './config';
+ 
+ export function main() {
++  console.log(config.name);
+   greet();
+ }
+diff --git a/src/greet.ts b/src/greet.ts
+new file mode 100644
+index 0000000..3333333
+--- /dev/null
++++ b/src/greet.ts
+@@ -0,0 +1,3 @@
++export function greet() {
++  console.log('hello');
++}
+diff --git a/src/util/old.ts b/src/util/new.ts
+similarity index 90%
+rename from src/util/old.ts
+rename to src/util/new.ts
+index 4444444..5555555 100644
+--- a/src/util/old.ts
++++ b/src/util/new.ts
+@@ -1,3 +1,3 @@
+ export function util() {
+-  return 1;
++  return 2;
+ }
+diff --git a/deleted.ts b/deleted.ts
+deleted file mode 100644
+index 6666666..0000000
+--- a/deleted.ts
++++ /dev/null
+@@ -1,2 +0,0 @@
+-export const dead = true;
+-export const gone = true;

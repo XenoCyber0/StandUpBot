@@ -1,0 +1,4 @@
+Keeps the docs/ folder in git.
+
+TODO(RELEASE): docs/demo.gif is a placeholder referenced from the README.
+See docs/README.md — record a real demo GIF before publishing.

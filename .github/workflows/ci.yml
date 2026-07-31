@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions: {}
+
+jobs:
+  build-test:
+    name: Typecheck, lint, test, build & package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build (tsc -> dist/)
+        run: pnpm build
+
+      - name: Package GitHub Action (ncc -> dist-action/)
+        run: pnpm package
+
+      - name: Verify Action bundle exists
+        shell: bash
+        run: |
+          test -s dist-action/index.js || {
+            echo "::error::dist-action/index.js missing or empty after packaging";
+            exit 1;
+          }
+          echo "dist-action/index.js: $(du -h dist-action/index.js | cut -f1)"

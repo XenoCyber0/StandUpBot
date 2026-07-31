@@ -1,0 +1,9 @@
+node_modules/
+# Library/CLI build output stays untracked (regenerated/published via npm).
+dist/
+# dist-action/ is the self-contained ncc bundle that the GitHub Action runs —
+# it MUST be committed (do not ignore it).
+*.tgz
+*.log
+.DS_Store
+coverage/

@@ -1,0 +1,32 @@
+# StandupBot configuration. Copy to `.standupbot.yml` in your repo root.
+
+# Tone steering for the generated description (e.g. "concise", "detailed",
+# "playful", "enterprise-formal"). Leave empty for the default tone.
+tone: concise
+
+# Max diff budget in approximate LLM tokens. Diffs larger than this are
+# chunked hierarchically and summarised rather than blindly truncated.
+maxDiffTokens: 6000
+
+# Bring-your-own-provider LLM settings. Non-secret connection details can be
+# committed here; environment variables (LLM_BASE_URL / LLM_MODEL /
+# LLM_PROVIDER_TYPE) override these. The API key must come from LLM_API_KEY
+# (environment only) — never commit it here.
+#
+# llm.providerType defaults to "openai-compatible" (the only provider
+# implemented today; reserved for future wire formats).
+llm:
+  baseUrl: https://openrouter.ai/api/v1
+  model: anthropic/claude-3.5-sonnet
+
+# File patterns to exclude from the prompt (lockfiles, generated code, etc).
+# Matched with gitignore-style globs against file paths in the diff.
+exclude:
+  - package-lock.json
+  - pnpm-lock.yaml
+  - yarn.lock
+  - '**/*.lock'
+  - '**/*.generated.*'
+  - '**/*.min.js'
+  - '**/dist/**'
+  - '**/coverage/**'

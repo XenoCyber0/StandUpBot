@@ -1,6 +1,8 @@
 # StandupBot
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-StandupBot-purple?logo=github)](https://github.com/marketplace/actions/standupbot)
+[![Open Source Love](https://img.shields.io/badge/Open%20Source-%E2%9D%A4-red)](https://github.com/XenoCyber0/StandUpBot)
 
 A GitHub Action that writes your PR descriptions for you. It runs the real diff and commits through an LLM you choose, and fills in a structured **Summary / Changes / Testing** description plus up to three labels — so you stop hand-writing PR bodies and standup updates.
 

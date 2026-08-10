@@ -1,8 +1,7 @@
-name: StandupBot
+name: StandupBot PR Describer
 description: >-
-  Auto-generate a high-quality PR description (Summary / Changes / Testing) and
-  suggested labels from the PR diff, using any OpenAI-compatible LLM endpoint
-  (OpenAI, OpenRouter, omniroute, freellmapi, Ollama, LM Studio, ...).
+  Auto-generate PR descriptions from real diffs using any OpenAI-compatible LLM.
+  You bring the endpoint.
 author: standupbot
 branding:
   icon: edit-3
